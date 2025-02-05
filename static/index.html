@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Booking</title>
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Online Booking</h1>
+        <nav>
+            <ul id="nav-links" class="nav-links">
+                <!-- Links will be populated by JavaScript -->
+            </ul>
+        </nav>
+        <div id="apartments" class="apartments">
+            <h2>Apartments</h2>
+            <table id="apartment-table" class="apartment-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="apartment-list" class="apartment-list">
+                    <!-- Apartments will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="cart" class="cart">
+            <h2>Cart</h2>
+            <table id="cart-table" class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-list" class="cart-list">
+                    <!-- Cart items will be listed here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.getElementById('nav-links');
+        const apartmentList = document.getElementById('apartment-list');
+        const cartList = document.getElementById('cart-list');
+
+        // Function to check authentication status
+        function checkAuth() {
+            return fetch('/api/check_auth')
+                .then(response => response.json())
+                .then(data => data)
+                .catch(() => ({ isAuthenticated: false, isAdmin: false }));
+        }
+
+        // Function to populate navigation links
+        function populateNavLinks(authData) {
+            navLinks.innerHTML = '';
+            if (authData.isAuthenticated) {
+                navLinks.innerHTML += '<li><a href="/logout" id="logout-link">Logout</a></li>';
+                navLinks.innerHTML += '<li><a href="/add_apartment">Add Apartment</a></li>';
+                if (authData.isAdmin) {
+                    navLinks.innerHTML += '<li><a href="/admin">Manage</a></li>';
+                }
+            } else {
+                navLinks.innerHTML += '<li><a href="#" id="login-link">Login</a></li>';
+                navLinks.innerHTML += '<li><a href="#" id="signup-link">Sign Up</a></li>';
+            }
+
+            const logoutLink = document.getElementById('logout-link');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    fetch('/logout', { method: 'GET' })
+                        .then(() => {
+                            populateNavLinks({ isAuthenticated: false, isAdmin: false });
+                            window.location.href = '/index';
+                        });
+                });
+            }
+
+            const loginLink = document.getElementById('login-link');
+            if (loginLink) {
+                loginLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    window.location.href = '/static/login.html';
+                });
+            }
+
+            const signupLink = document.getElementById('signup-link');
+            if (signupLink) {
+                signupLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    window.location.href = '/static/signup.html';
+                });
+            }
+        }
+
+        // Function to populate apartments
+        function populateApartments() {
+            fetch('/api/apartments')
+                .then(response => response.json())
+                .then(apartments => {
+                    apartmentList.innerHTML = '';
+                    apartments.forEach(apartment => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${apartment.Name}</td>
+                            <td>${apartment.Description}</td>
+                            <td>$${apartment.Price}</td>
+                            <td><button class="add-to-cart">Add to Cart</button></td>
+                        `;
+                        apartmentList.appendChild(tr);
+
+                        tr.querySelector('.add-to-cart').addEventListener('click', function() {
+                            // Check if the item is already in the cart
+                            const items = cartList.getElementsByTagName('tr');
+                            for (let i = 0; i < items.length; i++) {
+                                if (items[i].querySelector('td').textContent === apartment.Name) {
+                                    alert('This apartment is already in the cart.');
+                                    return;
+                                }
+                            }
+
+                            const cartItem = document.createElement('tr');
+                            cartItem.innerHTML = `
+                                <td>${apartment.Name}</td>
+                                <td>${apartment.Description}</td>
+                                <td>$${apartment.Price}</td>
+                            `;
+                            cartList.appendChild(cartItem);
+                        });
+                    });
+                });
+        }
+
+        // Initialize the page
+        checkAuth().then(authData => {
+            populateNavLinks(authData);
+            populateApartments();
+        });
+    });
+    </script>
+</body>
+</html>

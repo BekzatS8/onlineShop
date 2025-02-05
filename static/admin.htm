@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+</head>
+<body>
+    <h1>Admin Panel</h1>
+    <nav>
+        <ul>
+            <li><a href="/admin/users">Manage Users</a></li>
+            <li><a href="/admin/bookings">Manage Bookings</a></li>
+            <li><a href="/admin/catalog">Manage Catalog</a></li>
+            <li><a href="/admin/roles">Manage Roles</a></li> <!-- Added link to manage roles -->
+        </ul>
+    </nav>
+    <div id="content">
+        <!-- Content will be loaded here -->
+    </div>
+    <h1>Add New Apartment</h1>
+    <form action="/add_apartment" method="post">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" step="0.01" required>
+        <button type="submit">Add Apartment</button>
+    </form>
+    <script>
+        document.querySelector('nav').addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                e.preventDefault();
+                fetch(e.target.href)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('content').innerHTML = JSON.stringify(data, null, 2);
+                    });
+            }
+        });
+    </script>
+</body>
+</html>
